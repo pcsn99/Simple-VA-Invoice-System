@@ -20,7 +20,7 @@ public class MainProgram {
 		return DriverManager.getConnection(URL, USERNAME, PASSWORD);
 	}
 	
-	//MYSQL QUERIES
+	//MYSQL QUERIES ---------------------------------------------------------------------------------------------------
 	
 	private static void addClient(String firstName, String lastName, String contact ) {
 		try (Connection connection = getConnection()){
@@ -98,14 +98,26 @@ public class MainProgram {
 	
 	
 	
+	// MENUS ---------------------------------------------------------------------------------------------------------------------
 	
+	private static void MainMenu() {
+		
+		
+		
+	}
+	
+	
+	
+	
+	
+	//MAIN -----------------------------------------------------------------------------------------------------------------------
 	
 	public static void main(String[] args) {
 		 
 		//addClient("Luke","Skywalker","09167946748");
 		//System.out.println(clientCheck("Luke","Skywalker"));
 		//updateClientName(3, "Luke", "Darnok");	
-		updateClientContact(3,"09090909");
+		//updateClientContact(3,"09090909");
 		 
 		 
 		 
