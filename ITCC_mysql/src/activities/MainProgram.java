@@ -114,7 +114,7 @@ public class MainProgram {
 			e.printStackTrace();
 		}
 	}
-	//**
+	
 	private static void deleteClient(int client_id) {
 		try(Connection connection = getConnection()){
 			String query = "delete from client_info where client_id =?";
@@ -267,6 +267,119 @@ public class MainProgram {
 	}
 	*/
 	
+	private static int getClientID(String firstName, String lastName) {
+		 try (Connection connection = getConnection()) {
+		        String query = "select client_id from client_info where first_name = ? and last_name = ?";
+		        
+		        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+		            preparedStatement.setString(1, firstName);
+		            preparedStatement.setString(2, lastName);
+
+		            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+		                while (resultSet.next()) {
+		                    int client_id = resultSet.getInt("client_id");
+		                    
+		                    return client_id;
+		                }
+		            }
+		        }
+		    } catch (SQLException e) {
+		        e.printStackTrace();
+		    }
+		
+		return 0;
+		
+	}
+	
+	private static String getClientFirstName(int client_id) {
+		 try (Connection connection = getConnection()) {
+		        String query = "select first_name from client_info where client_id = ?";
+		        
+		        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+		            preparedStatement.setInt(1, client_id);
+
+		            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+		                while (resultSet.next()) {
+		                    String firstName = resultSet.getString("first_name");
+		                    
+		                    return firstName;
+		                }
+		            }
+		        }
+		    } catch (SQLException e) {
+		        e.printStackTrace();
+		    }
+		
+		return "";
+		
+	}
+	
+	private static String getClientLastName(int client_id) {
+		 try (Connection connection = getConnection()) {
+		        String query = "select last_name from client_info where client_id = ?";
+		        
+		        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+		            preparedStatement.setInt(1, client_id);
+
+		            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+		                while (resultSet.next()) {
+		                    String lastName = resultSet.getString("last_name");
+		                    
+		                    return lastName;
+		                }
+		            }
+		        }
+		    } catch (SQLException e) {
+		        e.printStackTrace();
+		    }
+		
+		return "";
+		
+	}
+	
+	
+	
+	private static void addInvoice(int client_id, String date ) {
+		try (Connection connection = getConnection()){
+			String insertQuery = "insert into invoice (client_id, status, price) values (?,?)" ;
+			try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)){
+				preparedStatement.setInt(1,  client_id);
+				preparedStatement.setString(2, date);
+				int rowsAffected = preparedStatement.executeUpdate();
+				if (rowsAffected > 0) {
+					System.out.println("Service added");
+				} else {
+					System.out.println("Failed to add Service");
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void displayAllInvoice() {
+		try(Connection connection = getConnection()){
+			String query = "select * from invoice";
+			try (Statement statement = connection.createStatement()){
+				try (ResultSet resultSet = statement.executeQuery(query)){
+					System.out.println("( Invoice ID, Client Name, Date)");
+					while(resultSet.next()) {
+						int id = resultSet.getInt("invoice_id");
+						String firstName = getClientFirstName(id);
+						String lastName = getClientLastName(id);
+						String date = resultSet.getString("date");
+						System.out.println(id + ", " + firstName + " " + lastName + ", " + date);
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	
 	// MENUS ---------------------------------------------------------------------------------------------------------------------
 	
 	private static void MainMenu() {
@@ -281,7 +394,12 @@ public class MainProgram {
 	//MAIN -----------------------------------------------------------------------------------------------------------------------
 	
 	public static void main(String[] args) {
-		 
+		
+		displayAllInvoice();
+		//System.out.println(getClientFirstName(1));
+		//System.out.println(getClientLastName(1));
+		//int x = getClientID("Paul","Atreidis");
+		//System.out.println(x);
 		//addClient("Luke","Skywalker","09167946748");
 		//System.out.println(clientCheck("Luke","Skywalker"));
 		//updateClientName(3, "Luke", "Darnok");	
@@ -290,7 +408,7 @@ public class MainProgram {
 		//deleteClient(3);
 		//addService("General Purpose", 1000f);
 		//addService("Wedding", 6000f);
-		displayAvailableService();
+		//displayAvailableService();
 		//updateServiceStatus(1,"available");
 		//updateServicePrice(2, 8000f);
 		
