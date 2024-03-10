@@ -114,8 +114,158 @@ public class MainProgram {
 			e.printStackTrace();
 		}
 	}
+	//**
+	private static void deleteClient(int client_id) {
+		try(Connection connection = getConnection()){
+			String query = "delete from client_info where client_id =?";
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)){
+				preparedStatement.setInt(1, client_id);
+				int rowsAffected = preparedStatement.executeUpdate();
+				if (rowsAffected > 0) {
+					System.out.println("Client Deleted");
+				} else {
+					System.out.println("no data deleted");
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 	
+	private static void addService(String serviceName, Float price ) {
+		String status = "available";
+		try (Connection connection = getConnection()){
+			String insertQuery = "insert into service (service_name, status, price) values (?,?,?)" ;
+			try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)){
+				preparedStatement.setString(1,  serviceName);
+				preparedStatement.setString(2, status);
+				preparedStatement.setFloat(3, price);
+				int rowsAffected = preparedStatement.executeUpdate();
+				if (rowsAffected > 0) {
+					System.out.println("Service added");
+				} else {
+					System.out.println("Failed to add Service");
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 	
+	private static void updateServiceStatus(int service_id, String status) {
+		try (Connection connection = getConnection()){
+			String query = "update service set status = ? where service_id = ?";
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)){
+				preparedStatement.setString(1, status);
+				preparedStatement.setInt(2, service_id);
+				int rowsAffected = preparedStatement.executeUpdate();
+				if (rowsAffected > 0) {
+					System.out.println("Service status updated");
+				} else {
+					System.out.println("no data updated");
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}			
+	}
+	
+	private static void updateServicePrice(int service_id, Float price) {
+		try (Connection connection = getConnection()){
+			String query = "update service set price = ? where service_id = ?";
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)){
+				preparedStatement.setFloat(1, price);
+				preparedStatement.setInt(2, service_id);
+				int rowsAffected = preparedStatement.executeUpdate();
+				if (rowsAffected > 0) {
+					System.out.println("Service price updated");
+				} else {
+					System.out.println("no data updated");
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}			
+	}
+	
+	private static void displayAllService() {
+		try(Connection connection = getConnection()){
+			String query = "select * from service";
+			try (Statement statement = connection.createStatement()){
+				try (ResultSet resultSet = statement.executeQuery(query)){
+					System.out.println("( Service ID, Service Name )");
+					while(resultSet.next()) {
+						int id = resultSet.getInt("service_id");
+						String serviceName = resultSet.getString("service_name");
+						System.out.println(id + ", " + serviceName);
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void displayAvailableService() {
+		try(Connection connection = getConnection()){
+			String query = "select * from service where status = 'available' ";
+			try (Statement statement = connection.createStatement()){
+				try (ResultSet resultSet = statement.executeQuery(query)){
+					System.out.println("( Service ID, Service Name )");
+					while(resultSet.next()) {
+						int id = resultSet.getInt("service_id");
+						String serviceName = resultSet.getString("service_name");
+						System.out.println(id + ", " + serviceName);
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void displayService(int service_id) {
+	    try (Connection connection = getConnection()) {
+	        String query = "select * from service where service_id = ?";
+	        
+	        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+	            preparedStatement.setInt(1, service_id);
+
+	            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+	                while (resultSet.next()) {
+	                    String serviceName = resultSet.getString("service_name");
+	                    float servicePrice = resultSet.getFloat("price");
+	                    String status = resultSet.getString("status");
+	                    
+	                    System.out.println(service_id + ": " + serviceName);
+	                    System.out.println("   Price: " + servicePrice);
+	                    System.out.println("   Status: " + status);
+	                }
+	            }
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	/*
+	private static void deleteService(int service_id) {
+		try(Connection connection = getConnection()){
+			String query = "delete from service where service_id =?";
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)){
+				preparedStatement.setInt(1, service_id);
+				int rowsAffected = preparedStatement.executeUpdate();
+				if (rowsAffected > 0) {
+					System.out.println("Service Deleted");
+				} else {
+					System.out.println("no data deleted");
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	*/
 	
 	// MENUS ---------------------------------------------------------------------------------------------------------------------
 	
@@ -136,9 +286,19 @@ public class MainProgram {
 		//System.out.println(clientCheck("Luke","Skywalker"));
 		//updateClientName(3, "Luke", "Darnok");	
 		//updateClientContact(3,"09090909");
-		displayClientNames();
-		 
-		 
+		//displayClientNames();
+		//deleteClient(3);
+		//addService("General Purpose", 1000f);
+		//addService("Wedding", 6000f);
+		displayAvailableService();
+		//updateServiceStatus(1,"available");
+		//updateServicePrice(2, 8000f);
+		
+		//displayAvailableService();
+		//System.out.println("");
+		//displayAllService();
+		
+		//displayService(1);
 		 
 		 
 		   }
