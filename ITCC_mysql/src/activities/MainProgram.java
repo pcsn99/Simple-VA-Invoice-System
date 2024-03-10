@@ -2,6 +2,7 @@ package activities;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -13,17 +14,40 @@ public class MainProgram {
 	private static final String USERNAME = "myuser";
 	private static final String PASSWORD = "1234";
 	
+	
+	
 	private static Connection getConnection() throws SQLException {
 		return DriverManager.getConnection(URL, USERNAME, PASSWORD);
 	}
 	
+	private static void addClient(String firstName, String lastName, String contact ) {
+		try (Connection connection = getConnection()){
+			String insertQuery = "insert into client_info (first_name,last_name,contact_info) values (?,?,?)" ;
+			try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)){
+				preparedStatement.setString(1,  firstName);
+				preparedStatement.setString(2, lastName);
+				preparedStatement.setString(3, contact);
+				int rowsAffected = preparedStatement.executeUpdate();
+				if (rowsAffected > 0) {
+					System.out.println("Client info added");
+				} else {
+					System.out.println("Failed to add Client info");
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public static void main(String[] args) {
-		 try ( Connection connection = getConnection()){
-			 
-			 System.out.println("connection successful");
-			 
-		      } catch(SQLException ex) {
-		         ex.printStackTrace();
-		      }  // Step 5: Close conn and stmt - Done automatically by try-with-resources (JDK 7)
+		 
+		addClient("Luke","Skywalker","09167946748");
+		 
+		 		
+		 
+		 
+		 
+		 
+		 
 		   }
 	}
