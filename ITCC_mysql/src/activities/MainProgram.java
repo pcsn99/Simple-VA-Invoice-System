@@ -20,6 +20,8 @@ public class MainProgram {
 		return DriverManager.getConnection(URL, USERNAME, PASSWORD);
 	}
 	
+	//MYSQL QUERIES
+	
 	private static void addClient(String firstName, String lastName, String contact ) {
 		try (Connection connection = getConnection()){
 			String insertQuery = "insert into client_info (first_name,last_name,contact_info) values (?,?,?)" ;
@@ -39,11 +41,71 @@ public class MainProgram {
 		}
 	}
 	
+	private static boolean clientCheck(String firstName, String lastName) {
+		try (Connection connection = getConnection()){
+			String query = "select count(*) from client_info where first_name =? and last_name =?";
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)){
+				preparedStatement.setString(1, firstName);
+				preparedStatement.setString(2, lastName);
+				try(ResultSet resultSet = preparedStatement.executeQuery()){
+					resultSet.next();
+					int count = resultSet.getInt(1);
+					return count > 0;
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	private static void updateClientName(int client_id, String firstName, String lastName) {
+		try (Connection connection = getConnection()){
+			String query = "update client_info set first_name = ?, last_name = ? where client_id = ?";
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)){
+				preparedStatement.setString(1, firstName);
+				preparedStatement.setString(2, lastName);
+				preparedStatement.setInt(3, client_id);
+				int rowsAffected = preparedStatement.executeUpdate();
+				if (rowsAffected > 0) {
+					System.out.println("Client name updated");
+				} else {
+					System.out.println("no data updated");
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void updateClientContact(int client_id, String contact) {
+		try (Connection connection = getConnection()){
+			String query = "update client_info set contact_info = ? where client_id = ?";
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)){
+				preparedStatement.setString(1, contact);
+				preparedStatement.setInt(2, client_id);
+				int rowsAffected = preparedStatement.executeUpdate();
+				if (rowsAffected > 0) {
+					System.out.println("Client contact info updated");
+				} else {
+					System.out.println("no data updated");
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	
+	
+	
 	public static void main(String[] args) {
 		 
-		addClient("Luke","Skywalker","09167946748");
-		 
-		 		
+		//addClient("Luke","Skywalker","09167946748");
+		//System.out.println(clientCheck("Luke","Skywalker"));
+		//updateClientName(3, "Luke", "Darnok");	
+		updateClientContact(3,"09090909");
 		 
 		 
 		 
