@@ -93,6 +93,25 @@ public class MainProgram {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
+		}			
+	}
+	
+	private static void displayClientNames() {
+		try(Connection connection = getConnection()){
+			String query = "select * from client_info";
+			try (Statement statement = connection.createStatement()){
+				try (ResultSet resultSet = statement.executeQuery(query)){
+					System.out.println("( Client ID, Client Name )");
+					while(resultSet.next()) {
+						int id = resultSet.getInt("Client_id");
+						String firstName = resultSet.getString("first_name");
+						String lastName = resultSet.getString("last_name");
+						System.out.println(id + ", " + firstName + " " + lastName);
+					}
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -104,11 +123,10 @@ public class MainProgram {
 		
 		
 		
+		
+		
+		
 	}
-	
-	
-	
-	
 	
 	//MAIN -----------------------------------------------------------------------------------------------------------------------
 	
@@ -118,7 +136,7 @@ public class MainProgram {
 		//System.out.println(clientCheck("Luke","Skywalker"));
 		//updateClientName(3, "Luke", "Darnok");	
 		//updateClientContact(3,"09090909");
-		 
+		displayClientNames();
 		 
 		 
 		 
