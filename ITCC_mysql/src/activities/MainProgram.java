@@ -741,6 +741,30 @@ public class MainProgram {
 		}
 	}
 	
+	private static void viewOrEditInvoiceMenu() {
+		
+		Scanner scanner = new Scanner(System.in);
+		System.out.println("--------------------------");
+		System.out.println("|  View or Edit Invoice  |");
+		System.out.println("--------------------------");
+		System.out.println(" 1. Add New Invoice");
+		System.out.println(" 2. View and Edit Invoice");
+		System.out.println("-------------------------------");
+		System.out.print("input integer of your choice: ");
+		try {
+			int choice = scanner.nextInt();
+			switch (choice) {
+				
+			
+			}
+			
+		}catch(java.util.InputMismatchException e) {
+			System.out.println("Error input, please try again\n");
+			invoiceManagementMenu();
+		}
+		
+	}
+	
 	//MAIN -----------------------------------------------------------------------------------------------------------------------
 	
 	public static void main(String[] args) {
