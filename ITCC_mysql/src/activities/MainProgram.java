@@ -588,8 +588,8 @@ public class MainProgram {
 		//displayAllService();
 		
 		//displayService(1);
-		Date userDate = parseDate("2024-07-05");
-		addInvoice(1,new java.sql.Date(userDate.getTime()));
+		//Date userDate = parseDate("2024-07-05");
+		//addInvoice(1,new java.sql.Date(userDate.getTime()));
 		// displayAllInvoice();
 		// displayInvoice(1);
 		//addServiceToInvoice(1,2,1);
