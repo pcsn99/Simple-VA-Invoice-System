@@ -592,7 +592,7 @@ public class MainProgram {
 		addInvoice(1,new java.sql.Date(userDate.getTime()));
 		// displayAllInvoice();
 		// displayInvoice(1);
-		addServiceToInvoice(1,2,1);
+		//addServiceToInvoice(1,2,1);
 		//displayInvoiceServices(1);
 		System.out.println("Total Spending: "+ displayTotalSpending(1));
 		System.out.println(totalSpendingOfClient(1));
