@@ -9,6 +9,7 @@ import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Scanner;
 
 public class MainProgram {
 	
@@ -387,11 +388,11 @@ public class MainProgram {
 	            preparedStatement.setInt(1, client_id);
 
 	            try (ResultSet resultSet = preparedStatement.executeQuery()){
-					System.out.println("( Invoice ID, Date)");
+					System.out.println("( Invoice_ID, Date)");
 					while(resultSet.next()) {
 						int id = resultSet.getInt("invoice_id");
 						Date date = resultSet.getDate("event_date");
-						System.out.println(id + ", " + date);
+						System.out.println("  "+id + ", " + date);
 					}
 				}
 	        }
@@ -509,7 +510,7 @@ public class MainProgram {
 		    return 0;
 	}
 	
-	 private static float displayTotalSpending(int invoice_id) {
+	 private static float displayInvoiceSpending(int invoice_id) {
 	        try (Connection connection = getConnection()) {
 	            String query = "select " +
 	            			   "invoice.*, " +
@@ -537,6 +538,111 @@ public class MainProgram {
 			return 0;
 	    }
 	 
+	 private static void deleteInvoice(int invoice_id) {
+			try(Connection connection = getConnection()){
+				String query = "delete from invoice where invoice_id =?";
+				try (PreparedStatement preparedStatement = connection.prepareStatement(query)){
+					preparedStatement.setInt(1, invoice_id);
+					int rowsAffected = preparedStatement.executeUpdate();
+					if (rowsAffected > 0) {
+						System.out.println("Invoice Deleted");
+					} else {
+						System.out.println("no data deleted");
+					}
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+		}
+	 
+	 private static void incomePastThirtyDays() {
+		 try (Connection connection = getConnection()) {
+	            String sql = "SELECT SUM(service.price * invoice_services.service_amount) AS total_income " +
+	                         "FROM invoice " +
+	                         "JOIN invoice_services ON invoice.invoice_id = invoice_services.invoice_id " +
+	                         "JOIN service ON invoice_services.service_id = service.service_id " +
+	                         "WHERE invoice.event_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND CURDATE()";
+
+	            try (PreparedStatement statement = connection.prepareStatement(sql);
+	                 ResultSet resultSet = statement.executeQuery()) {
+
+	                if (resultSet.next()) {
+	                    double totalIncome = resultSet.getDouble("total_income");
+	                    System.out.println("Total Income: " + totalIncome);
+	                } else {
+	                    System.out.println("No results found");
+	                }
+	            }
+	        } catch (SQLException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	 
+	 private static void mostPopularServicePastThirtyDays() {
+		 try (Connection connection = getConnection()) {
+			 String sql = "SELECT service.service_name, SUM(invoice_services.service_amount) AS total_quantity " +
+                     "FROM invoice " +
+                     "JOIN invoice_services ON invoice.invoice_id = invoice_services.invoice_id " +
+                     "JOIN service ON invoice_services.service_id = service.service_id " +
+                     "WHERE invoice.event_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND CURDATE() " +
+                     "GROUP BY service.service_name " +
+                     "ORDER BY total_quantity DESC " +
+                     "LIMIT 1";
+
+			 try (PreparedStatement statement = connection.prepareStatement(sql);
+					 ResultSet resultSet = statement.executeQuery()) {
+
+				 if (resultSet.next()) {
+					 String topServiceName = resultSet.getString("service_name");
+					 int totalQuantity = resultSet.getInt("total_quantity");
+					 System.out.println("Top Service: " + topServiceName + ", Total Quantity: " + totalQuantity);
+				 } else {
+					 System.out.println("No results found");
+				 }
+			 }
+		 } catch (SQLException e) {
+			 e.printStackTrace();
+    
+		 }
+	 }
+	 
+	 private static void topClientPastThirtyDays() {
+		 try (Connection connection = getConnection()) {
+	            String query = "SELECT " +
+	                    "client_info.client_id, " +
+	                    "client_info.first_name, " +
+	                    "client_info.last_name, " +
+	                    "SUM(service.price * invoice_services.service_amount) AS total_spending " +
+	                    "FROM client_info " +
+	                    "JOIN invoice ON client_info.client_id = invoice.client_id " +
+	                    "JOIN invoice_services ON invoice.invoice_id = invoice_services.invoice_id " +
+	                    "JOIN service ON invoice_services.service_id = service.service_id " +
+	                    "WHERE invoice.event_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 30 DAY) AND CURDATE() " +
+	                    "GROUP BY client_info.client_id " +
+	                    "ORDER BY total_spending DESC " +
+	                    "LIMIT 1";
+
+	            try (PreparedStatement preparedStatement = connection.prepareStatement(query);
+	                 ResultSet resultSet = preparedStatement.executeQuery()) {
+
+	                if (resultSet.next()) {
+	                	String firstName = resultSet.getString("first_name");
+	                	String lastName = resultSet.getString("last_name");
+	                    float topClientSpending = resultSet.getFloat("total_spending");
+	                    System.out.println("Top Client Past Thirty Days:");
+	                    System.out.println("Client name: "+firstName + " "+lastName);
+	                    System.out.println("Total Spending: "+topClientSpending);
+	                } else {
+						 System.out.println("No results found");
+					 }
+	            }
+	        } catch (SQLException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	
+	 
+	 
 	 private static Date parseDate(String dateString) {
 	        try {
 	            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
@@ -553,12 +659,86 @@ public class MainProgram {
 	// MENUS ---------------------------------------------------------------------------------------------------------------------
 	
 	private static void MainMenu() {
+		Scanner scanner = new Scanner(System.in);
+		System.out.println("--------------------------------------");
+		System.out.println("|  Virtual Assistant Invoice System  |");
+		System.out.println("--------------------------------------");
+		System.out.println("1. Invoice Management ");
+		System.out.println("2. Client Management ");
+		System.out.println("3. Service Management ");
+		System.out.println("");
+		System.out.print("Input integer of management system you want to access: ");
+		try {
+			int choice = scanner.nextInt();
+			
+			switch (choice) {
+				
+			case 1:
+				System.out.println("---------------------------------------------------------");
+				invoiceManagementMenu();
+				break;
+			
+			case 2:
+				System.out.println("---------------------------------------------------------");
+				//client management menu
+				break;
+			
+			case 3:
+				System.out.println("---------------------------------------------------------");
+				//service management menu
+				break;
+			
+			default:
+				System.out.println("---------------------------------------------------------");
+				System.out.println("Integer choice does not exist, please try again\n");
+				MainMenu();
+			}
+			
+			
+		}catch(java.util.InputMismatchException e) {
+			System.out.println("Error input, please try again\n");
+			MainMenu();
+		}
 		
+	}
+	
+	private static void clientInvoiceManagementMenu(int client_id) {
+		Scanner scanner = new Scanner(System.in);
 		
+		displayInvoice(client_id);
+		System.out.println("");
+		System.out.print("input Invoice_ID to display Invoice info: ");
+			try {
+			
+				int choice = scanner.nextInt();
+				displayInvoiceServices(choice);
+				System.out.println("Total Invoice Spending: "+displayInvoiceSpending(choice));
+			
+			}catch(java.util.InputMismatchException e) {
+				System.out.println("Error input, please try again\n");
+				invoiceManagementMenu();
+			}
 		
+	}
+	
+	private static void invoiceManagementMenu() {
 		
-		
-		
+		Scanner scanner = new Scanner(System.in);
+		System.out.println("------------------------");
+		System.out.println("|  Invoice Management  |");
+		System.out.println("------------------------");
+		displayClientNames();
+		System.out.println("");
+		System.out.print("input Client_ID of client to display their invoices: ");
+		try {
+			
+			int choice = scanner.nextInt();
+			clientInvoiceManagementMenu(choice);
+			
+		}catch(java.util.InputMismatchException e) {
+			System.out.println("Error input, please try again\n");
+			invoiceManagementMenu();
+		}
 	}
 	
 	//MAIN -----------------------------------------------------------------------------------------------------------------------
@@ -571,11 +751,13 @@ public class MainProgram {
 		//System.out.println(getClientLastName(1));
 		//int x = getClientID("Paul","Atreidis");
 		//System.out.println(x);
+		
 		//addClient("Luke","Skywalker","09167946748");
 		//System.out.println(clientCheck("Luke","Skywalker"));
 		//updateClientName(3, "Luke", "Darnok");	
 		//updateClientContact(3,"09090909");
 		//displayClientNames();
+		
 		//deleteClient(3);
 		//addService("General Purpose", 1000f);
 		//addService("Wedding", 6000f);
@@ -592,9 +774,18 @@ public class MainProgram {
 		//addInvoice(1,new java.sql.Date(userDate.getTime()));
 		// displayAllInvoice();
 		// displayInvoice(1);
-		//addServiceToInvoice(1,2,1);
+		
+		//addServiceToInvoice(2,2,1);
 		//displayInvoiceServices(1);
-		System.out.println("Total Spending: "+ displayTotalSpending(1));
-		System.out.println(totalSpendingOfClient(1));
+		//removeInvoiceService(5);
+		//
+		//incomePastThirtyDays();
+		//System.out.println("Total Spending: "+ displayTotalSpending(2));
+		//System.out.println(totalSpendingOfClient(1));
+		//mostPopularServicePastThirtyDays();
+		//topClientPastThirtyDays();
+		
+		MainMenu();
+		
 		   }
 	}
