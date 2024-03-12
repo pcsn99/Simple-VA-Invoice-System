@@ -158,6 +158,48 @@ public class MainProgram {
 		}
 	}
 	
+	private static void displayClient(int client_id) {
+	    try (Connection connection = getConnection()) {
+	        String query = "select * from client_info where client_id = ?";
+	        
+	        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+	            preparedStatement.setInt(1, client_id);
+
+	            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+	                while (resultSet.next()) {
+	                    String firstName = resultSet.getString("first_name");
+	                    String lastName = resultSet.getString("last_name");
+	                    String contact = resultSet.getString("contact_info");
+	                    float spending = totalSpendingOfClient(client_id);
+	                    System.out.println("-------------------------------");
+	                    System.out.println("Client Name: "+ firstName + " "+lastName);
+	                    System.out.println("Contact Info:  " + contact);
+	                    System.out.println("Total Spending: " + spending);
+	                }
+	            }
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	}
+	
+	private static void updateServiceName(int service_id, String name) {
+		try (Connection connection = getConnection()){
+			String query = "update service set service_name = ? where service_id = ?";
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)){
+				preparedStatement.setString(1, name);
+				preparedStatement.setInt(2, service_id);
+				int rowsAffected = preparedStatement.executeUpdate();
+				if (rowsAffected > 0) {
+					System.out.println("Service name updated");
+				} else {
+					System.out.println("no data updated");
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}		
+	}
 	
 	private static void updateServiceStatus(int service_id, String status) {
 		try (Connection connection = getConnection()){
@@ -200,17 +242,41 @@ public class MainProgram {
 			String query = "select * from service";
 			try (Statement statement = connection.createStatement()){
 				try (ResultSet resultSet = statement.executeQuery(query)){
-					System.out.println("( Service ID, Service Name )");
+					System.out.println("( Service ID, Service Name, price, status )");
 					while(resultSet.next()) {
 						int id = resultSet.getInt("service_id");
 						String serviceName = resultSet.getString("service_name");
-						System.out.println(id + ", " + serviceName);
+						String status = resultSet.getString("status");
+						float price = resultSet.getFloat("price");
+						
+						System.out.println(id + ", " + serviceName+ ", " +price+ ", " +status);
 					}
 				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private static String getServiceStatus(int service_id) {
+		try (Connection connection = getConnection()) {
+	        String query = "select * from service where service_id = ?";
+	        
+	        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+	            preparedStatement.setInt(1, service_id);
+
+	            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+	                while (resultSet.next()) {
+	                    String status = resultSet.getString("status");
+	                    return status;
+	                   
+	                }
+	            }
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+		return "";
 	}
 	
 	private static void displayAvailableService() {
@@ -595,7 +661,7 @@ public class MainProgram {
 
 	                if (resultSet.next()) {
 	                    double totalIncome = resultSet.getDouble("total_income");
-	                    System.out.println("Total Income: " + totalIncome);
+	                    System.out.println("Total Income past 30 days: " + totalIncome);
 	                } else {
 	                    System.out.println("No results found");
 	                }
@@ -693,8 +759,8 @@ public class MainProgram {
 		System.out.println("1. Invoice Management ");
 		System.out.println("2. Client Management ");
 		System.out.println("3. Service Management ");
-		System.out.println("");
-		System.out.println("4. EXIT");
+		System.out.println("4. Simple Analytics");
+		System.out.println("0. EXIT");
 		System.out.println("");
 		System.out.print("Input integer of management system you want to access: ");
 		try {
@@ -709,16 +775,22 @@ public class MainProgram {
 			
 			case 2:
 				System.out.println("---------------------------------------------------------");
-				//client management menu
+				clientManagementMenu();
 				break;
 			
 			case 3:
 				System.out.println("---------------------------------------------------------");
-				//service management menu
+				serviceManagementMenu();
+				break;
+				
+			case 4:
+				System.out.println("---------------------------------------------------------");
+				displayAnalytics();
 				break;
 			
-			case 4:
+			case 0:
 				System.out.println("GoodBye!");
+				System.exit(0);
 				break;
 			
 			default:
@@ -733,6 +805,189 @@ public class MainProgram {
 			MainMenu();
 		}
 		
+	}
+	
+	private static void serviceManagementMenu() {
+		Scanner scanner = new Scanner(System.in);
+		System.out.println("-----------------");
+		System.out.println("|  Service List  |");
+		displayAllService();
+		System.out.println("");
+		System.out.println("-------------------------");
+		System.out.println("1. Edit Service Name");
+		System.out.println("2. Edit Service Price ");
+		System.out.println("3. Edit Service Status");
+		System.out.println("4. Add New Service");
+		System.out.println("0. BACK");
+		System.out.print("Input integer of your choice: ");
+		int choice = scanner.nextInt();
+		if (choice == 0) {
+			MainMenu();
+		}
+			try {
+				try {
+					try {
+						
+						switch (choice) {
+						case 1:
+							System.out.println("|  Edit Service Name  |");
+							System.out.println("-----------------------");
+							System.out.print("Input service_id of service you want to edit: ");
+							String service = scanner.nextLine();
+							System.out.print("Input new name: ");
+							String serviceName = scanner.nextLine();
+							updateServiceName(choice,serviceName);
+							serviceManagementMenu();
+						
+						case 2:
+							System.out.println("|  Edit Service Price  |");
+							System.out.println("------------------------");
+							System.out.print("Input service_id of service you want to edit: ");
+							int serviceID = scanner.nextInt();
+							System.out.print("Input new price: ");
+							float newPrice = scanner.nextFloat();
+							updateServicePrice(serviceID,newPrice);
+							serviceManagementMenu();
+						
+						case 3:
+							System.out.println("|  Edit Service Status  |");
+							System.out.println("-------------------------");
+							System.out.print("Input service_id of service you want to edit: ");
+							int serviceid = scanner.nextInt();
+							String stat = getServiceStatus(serviceid);
+								if (stat.equals("available")){
+									String status = "unavailable";
+									updateServiceStatus(serviceid, status );
+								}
+								else if (stat.equals("unavailable")){
+									String status = "available";
+									updateServiceStatus(serviceid, status );
+								}
+								serviceManagementMenu();
+						
+						case 4:
+							System.out.println("|  Add New Service  |");
+							System.out.println("-------------------------");
+							System.out.print("Input service name ");
+							String name = scanner.nextLine();
+							System.out.print("Input price of service: ");
+							float servicePrice = scanner.nextFloat();
+							addService(name, servicePrice);
+							serviceManagementMenu();
+						
+						
+						case 0:
+							MainMenu();
+							
+						default:
+							System.out.println("---------------------------------------------------------");
+							System.out.println("Integer choice does not exist, please try again\n");
+							serviceManagementMenu();
+							
+						}
+						
+					}catch(java.util.InputMismatchException e) {
+						System.out.println("Error input, please try again\n");
+						serviceManagementMenu();
+					}
+					
+				}catch(java.util.InputMismatchException e) {
+					System.out.println("Error input, please try again\n");
+					serviceManagementMenu();
+				}
+				
+			
+			}catch(java.util.InputMismatchException e) {
+				System.out.println("Error input, please try again\n");
+				serviceManagementMenu();
+			}
+	}
+	
+	private static void clientManagementMenu() {
+		Scanner scanner = new Scanner(System.in);
+		System.out.println("-----------------");
+		System.out.println("|  Client List  |");
+		displayClientNames();
+		System.out.println("0. BACK");
+		System.out.println("");
+		System.out.print("input Client_ID to display Client info: ");
+		int client = scanner.nextInt();
+		if (client == 0) {
+			MainMenu();
+		}
+			try {
+				try {
+					
+					displayClient(client);
+					System.out.println("-------------------------");
+					System.out.println("1. Edit Name");
+					System.out.println("2. Edit Contact Info ");
+					System.out.println("3. Delete Client Info (WARNING THIS WILL REMOVE ALL RELATED RECORDS)");
+					System.out.println("0. BACK");
+					
+					try {
+						System.out.println("-----------------------------");
+						System.out.print("Input option of your choice: ");
+						int choiceA = scanner.nextInt();
+						
+						switch (choiceA) {
+						case 1:
+							System.out.println("|  Edit Name  |");
+							System.out.println("---------------");
+							System.out.print("Input First Name: ");
+							String firstName = scanner.nextLine();
+							System.out.print("Input Last Name: ");
+							String lastName = scanner.nextLine();
+							updateClientName(client,firstName,lastName);
+							clientManagementMenu();
+						
+						case 2:
+							
+							System.out.println("|  Edit Contact Info  |");
+							System.out.println("-----------------------");
+							System.out.print("Input New Contact Info: ");
+							scanner.nextLine();
+							String contactINFO = scanner.nextLine();
+							updateClientContact(client,contactINFO);
+							clientManagementMenu();
+						
+						case 3:
+							System.out.print("input 12345 to confirm: ");
+							String password = scanner.nextLine();
+							if (password.equals("12345")) {
+								deleteClient(client);
+							}
+							else {
+								System.out.println("Error");
+								clientManagementMenu();
+							}
+							
+							
+						case 0:
+							clientManagementMenu();
+							
+						default:
+							System.out.println("---------------------------------------------------------");
+							System.out.println("Integer choice does not exist, please try again\n");
+							clientManagementMenu();
+							
+						}
+						
+					}catch(java.util.InputMismatchException e) {
+						System.out.println("Error input, please try again\n");
+						clientManagementMenu();
+					}
+					
+				}catch(java.util.InputMismatchException e) {
+					System.out.println("Error input, please try again\n");
+					clientManagementMenu();
+				}
+				
+			
+			}catch(java.util.InputMismatchException e) {
+				System.out.println("Error input, please try again\n");
+				clientManagementMenu();
+			}
 	}
 	
 	private static void clientInvoiceManagementMenu(int client_id) {
@@ -754,6 +1009,7 @@ public class MainProgram {
 					System.out.println("1. Add Service");
 					System.out.println("2. Edit Service Amount");
 					System.out.println("3. Delete Service");
+					System.out.println("4. Delete Invoice");
 					System.out.println("0. BACK");
 					
 					try {
@@ -789,6 +1045,10 @@ public class MainProgram {
 							removeInvoiceService(choiceD);
 							clientInvoiceManagementMenu(client_id);
 						
+						case 4:
+							
+							deleteInvoice(choiceInvoice);
+						
 						case 0:
 							viewOrEditInvoiceMenu();
 							
@@ -816,12 +1076,11 @@ public class MainProgram {
 			}
 	}
 	
-	private static void invoiceServicesOptions() {
-		System.out.println("-------------------------");
-		System.out.println("1. Add Service");
-		System.out.println("2. Edit Service Amount");
-		System.out.println("3. Delete Service");
-		System.out.println("0. BACK");
+	private static void displayAnalytics() {
+		incomePastThirtyDays();
+		mostPopularServicePastThirtyDays();
+		topClientPastThirtyDays();
+		invoiceManagementMenu();
 	}
 	
 	private static void invoiceManagementMenu() {
