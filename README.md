@@ -20,8 +20,8 @@ This Java program is designed for the user to manage clients, services, and invo
 
 ### 3. Invoice Management
 - **Add New Invoice**: Adds new invoice to the system
-- **Add New Client**: Checks whether the client information used is new or not.
-- **Add Services to Invoice**: Include services in an invoice./
+- **Add New Client**: Checks whether the client information used is new or not, if it is new, it adds Client into the system.
+- **Add Services to Invoice**: Include services in an invoice.
 - **View Invoices for a Client**: See all invoices for a particular client.
 - **Delete Invoice**: Remove an invoice from the system.
 
