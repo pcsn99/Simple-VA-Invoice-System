@@ -137,6 +137,8 @@ public class MainProgram {
 	}
 	
 	private static void addService(String serviceName, Float price ) {
+
+
 		String status = "available";
 		try (Connection connection = getConnection()){
 			String insertQuery = "insert into service (service_name, status, price) values (?,?,?)" ;
@@ -155,6 +157,7 @@ public class MainProgram {
 			e.printStackTrace();
 		}
 	}
+	
 	
 	private static void updateServiceStatus(int service_id, String status) {
 		try (Connection connection = getConnection()){
@@ -270,6 +273,7 @@ public class MainProgram {
 		}
 	}
 	*/
+	
 	
 	private static int getClientID(String firstName, String lastName) {
 		 try (Connection connection = getConnection()) {
@@ -742,6 +746,8 @@ public class MainProgram {
 				try {
 					int choiceInvoice = scanner.nextInt();
 					displayInvoiceServices(choiceInvoice);
+					System.out.println("");
+					System.out.println("");
 					System.out.println("Total Invoice Spending: "+displayInvoiceSpending(choiceInvoice));
 					
 					System.out.println("-------------------------");
@@ -769,7 +775,7 @@ public class MainProgram {
 						
 						case 2:
 							
-							System.out.print("Input service_id of your choice: ");
+							System.out.print("Input invoice_service_id of your choice: ");
 							int choiceC = scanner.nextInt();
 							System.out.print("Input amount: ");
 							float choiceCAmount = scanner.nextFloat();
