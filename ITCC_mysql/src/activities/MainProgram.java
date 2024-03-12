@@ -341,20 +341,19 @@ public class MainProgram {
 		
 	}
 	
-	
-	
-	private static void addInvoice(int client_id, java.sql.Date date ) {
+	private static void addInvoice(int client_id, java.util.Date dateEvent ) {
 		try (Connection connection = getConnection()){
 			String insertQuery = "insert into invoice (client_id, event_date) values (?,?)" ;
-			try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)){
-				preparedStatement.setInt(1,  client_id);
-				preparedStatement.setDate(2, date);
-				int rowsAffected = preparedStatement.executeUpdate();
-				if (rowsAffected > 0) {
-					System.out.println("Invoice added");
-				} else {
-					System.out.println("Failed to add Service");
-				}
+			try (PreparedStatement preparedStatement = connection.prepareStatement(insertQuery)) {
+	            preparedStatement.setInt(1, client_id);
+	            preparedStatement.setTimestamp(2, new java.sql.Timestamp(dateEvent.getTime())); 
+	            int rowsAffected = preparedStatement.executeUpdate();
+
+	            if (rowsAffected > 0) {
+	                System.out.println("Invoice added");
+	            } else {
+	                System.out.println("Failed to add invoice");
+	            }
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -399,6 +398,28 @@ public class MainProgram {
 	    } catch (SQLException e) {
 	        e.printStackTrace();
 	    }
+	}
+	
+	private static int getInvoiceID(String first_Name, String last_Name, java.util.Date date) {
+		try(Connection connection = getConnection()){
+			String query = "select * from invoice where first_name = ? and last_name = ? and event_date = ?";
+			try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+	            preparedStatement.setString(1, first_Name);
+	            preparedStatement.setString(2, last_Name);
+	            preparedStatement.setTimestamp(3, new java.sql.Timestamp(date.getTime()));
+
+	            try (ResultSet resultSet = preparedStatement.executeQuery(query)){
+					while(resultSet.next()) {
+						int id = resultSet.getInt("invoice_id");
+						
+						return id;
+					}
+				}
+	        }
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		return 0;
 	}
 	
 	private static void addServiceToInvoice(int invoice_id, int service_id, int service_amount) {
@@ -450,15 +471,17 @@ public class MainProgram {
 	            preparedStatement.setInt(1, invoice_id);
 
 	            try (ResultSet resultSet = preparedStatement.executeQuery()) {
-	            	 System.out.println("Invoice Services:");
+	            	 System.out.println("--------------------------------");
+	            	 System.out.println("|  Invoice Services  |");
+	            	 System.out.println("(Invoice_service_ID, service name, price per, service amount)");
+	            	 System.out.println("");
 	                    while (resultSet.next()) {
-	                        int invoiceId = resultSet.getInt("invoice_services_id");
+	                        int invoiceServiceId = resultSet.getInt("invoice_services_id");
 	                        float price = resultSet.getFloat("price");
 	                        String serviceName = resultSet.getString("service_name");
 	                        float serviceAmount = resultSet.getFloat("service_amount");
-
-	                        System.out.println("Invoice ID: " + invoiceId + ", Service Name: " + serviceName + ", Price per: " + price +
-	                                		   ", Service Amount: " + serviceAmount);
+	                        
+	                        System.out.println(invoiceServiceId + ", "+serviceName+", "+price+", "+serviceAmount);
 	                    }
 	            }
 	        }
@@ -667,6 +690,8 @@ public class MainProgram {
 		System.out.println("2. Client Management ");
 		System.out.println("3. Service Management ");
 		System.out.println("");
+		System.out.println("4. EXIT");
+		System.out.println("");
 		System.out.print("Input integer of management system you want to access: ");
 		try {
 			int choice = scanner.nextInt();
@@ -688,6 +713,10 @@ public class MainProgram {
 				//service management menu
 				break;
 			
+			case 4:
+				System.out.println("GoodBye!");
+				break;
+			
 			default:
 				System.out.println("---------------------------------------------------------");
 				System.out.println("Integer choice does not exist, please try again\n");
@@ -704,21 +733,89 @@ public class MainProgram {
 	
 	private static void clientInvoiceManagementMenu(int client_id) {
 		Scanner scanner = new Scanner(System.in);
-		
+		System.out.println("------------------");
+		System.out.println("|  Invoice List  |");
 		displayInvoice(client_id);
 		System.out.println("");
 		System.out.print("input Invoice_ID to display Invoice info: ");
 			try {
-			
-				int choice = scanner.nextInt();
-				displayInvoiceServices(choice);
-				System.out.println("Total Invoice Spending: "+displayInvoiceSpending(choice));
+				try {
+					int choiceInvoice = scanner.nextInt();
+					displayInvoiceServices(choiceInvoice);
+					System.out.println("Total Invoice Spending: "+displayInvoiceSpending(choiceInvoice));
+					
+					System.out.println("-------------------------");
+					System.out.println("1. Add Service");
+					System.out.println("2. Edit Service Amount");
+					System.out.println("3. Delete Service");
+					System.out.println("0. BACK");
+					
+					try {
+						System.out.println("-----------------------------");
+						System.out.print("Input option of your choice: ");
+						int choiceA = scanner.nextInt();
+						
+						switch (choiceA) {
+						case 1:
+							System.out.println("|  Available Services  |");
+							displayAvailableService();
+							System.out.println("-------------------");
+							System.out.print("Input service_id of your choice: ");
+							int choiceB = scanner.nextInt();
+							System.out.print("Input amount: ");
+							int choiceBAmount = scanner.nextInt();
+							addServiceToInvoice(choiceInvoice,choiceB,choiceBAmount);
+							clientInvoiceManagementMenu(client_id);
+						
+						case 2:
+							
+							System.out.print("Input service_id of your choice: ");
+							int choiceC = scanner.nextInt();
+							System.out.print("Input amount: ");
+							float choiceCAmount = scanner.nextFloat();
+							updateInvoiceServiceAmount(choiceC , choiceCAmount);
+							clientInvoiceManagementMenu(client_id);
+						
+						case 3:
+							
+							System.out.print("Input service_id of your choice: ");
+							int choiceD = scanner.nextInt();
+							removeInvoiceService(choiceD);
+							clientInvoiceManagementMenu(client_id);
+						
+						case 0:
+							viewOrEditInvoiceMenu();
+							
+						default:
+							System.out.println("---------------------------------------------------------");
+							System.out.println("Integer choice does not exist, please try again\n");
+							clientInvoiceManagementMenu(client_id);
+							
+						}
+						
+					}catch(java.util.InputMismatchException e) {
+						System.out.println("Error input, please try again\n");
+						clientInvoiceManagementMenu(client_id);
+					}
+					
+				}catch(java.util.InputMismatchException e) {
+					System.out.println("Error input, please try again\n");
+					clientInvoiceManagementMenu(client_id);
+				}
+				
 			
 			}catch(java.util.InputMismatchException e) {
 				System.out.println("Error input, please try again\n");
-				invoiceManagementMenu();
+				clientInvoiceManagementMenu(client_id);
 			}
-		
+	}
+	
+	private static void invoiceServicesOptions() {
+		System.out.println("-------------------------");
+		System.out.println("1. Add Service");
+		System.out.println("2. Edit Service Amount");
+		System.out.println("3. Delete Service");
+		System.out.println("0. BACK");
 	}
 	
 	private static void invoiceManagementMenu() {
@@ -727,13 +824,35 @@ public class MainProgram {
 		System.out.println("------------------------");
 		System.out.println("|  Invoice Management  |");
 		System.out.println("------------------------");
-		displayClientNames();
-		System.out.println("");
-		System.out.print("input Client_ID of client to display their invoices: ");
+		System.out.println(" 1. Add New Invoice");
+		System.out.println(" 2. View and Edit Invoice");
+		System.out.println(" 3. BACK");
+		System.out.println("-------------------------------");
+		System.out.print("input integer of your choice: ");
 		try {
-			
 			int choice = scanner.nextInt();
-			clientInvoiceManagementMenu(choice);
+			switch (choice) {
+			case 1:
+				System.out.println("---------------------------");
+				addNewInvoice();
+				break;
+			
+			case 2:
+				System.out.println("---------------------------");
+				viewOrEditInvoiceMenu();
+				break;
+			
+			case 3:
+				System.out.println("---------------------------");
+				MainMenu();
+				break;
+				
+			default:
+				System.out.println("Error, please try again\n");
+				invoiceManagementMenu();
+				
+			}
+				
 			
 		}catch(java.util.InputMismatchException e) {
 			System.out.println("Error input, please try again\n");
@@ -747,22 +866,90 @@ public class MainProgram {
 		System.out.println("--------------------------");
 		System.out.println("|  View or Edit Invoice  |");
 		System.out.println("--------------------------");
-		System.out.println(" 1. Add New Invoice");
-		System.out.println(" 2. View and Edit Invoice");
-		System.out.println("-------------------------------");
-		System.out.print("input integer of your choice: ");
+		displayClientNames();
+		System.out.println("0, BACK");
+		System.out.println("");
+		System.out.print("input Client_ID of client to display their invoices: ");
 		try {
-			int choice = scanner.nextInt();
-			switch (choice) {
-				
 			
+			int choice = scanner.nextInt();
+			if (choice == 0) {
+				invoiceManagementMenu();
+			} else {
+				clientInvoiceManagementMenu(choice);
 			}
 			
 		}catch(java.util.InputMismatchException e) {
 			System.out.println("Error input, please try again\n");
-			invoiceManagementMenu();
+			viewOrEditInvoiceMenu();
 		}
 		
+	}
+	
+	private static void addServicesMenu(int invoice_id) {
+		
+		Scanner scanner = new Scanner(System.in);
+		System.out.println("|  Services  |");
+		displayAvailableService();
+		System.out.println("0. DONE");
+		
+		try {
+			
+			System.out.print("input service_id of service you want to add:");
+			int service_id = scanner.nextInt();
+			
+			if (service_id == 0) {
+				viewOrEditInvoiceMenu();
+			}else {
+				System.out.print("enter amount: ");
+				int amount = scanner.nextInt();
+				addServiceToInvoice(invoice_id, service_id, amount);
+				addServicesMenu(invoice_id);
+			}
+			
+		}catch(java.util.InputMismatchException e) {
+			System.out.println("Error input, please try again\n");
+			viewOrEditInvoiceMenu();
+		}
+		
+	}
+	
+	private static void addNewInvoice() {
+		Scanner scanner = new Scanner(System.in);
+		System.out.println("---------------------");
+		System.out.println("|  Add New Invoice  |");
+		System.out.println("---------------------");
+		System.out.print("Input client first name: ");
+		String firstName = scanner.nextLine();
+		System.out.print("Input client last name: ");
+		String lastName = scanner.nextLine();
+		Boolean check = clientCheck(firstName, lastName);
+		
+		if (check == true) {
+			System.out.println("**Client Info Exists**");
+			int client_id = getClientID(firstName,lastName);
+			System.out.print("input date of event (YYYY-MM-DD): ");
+			String date = scanner.nextLine();
+			Date dateEvent = parseDate(date);
+			addInvoice(client_id, dateEvent );
+			int invoice_ID = getInvoiceID(firstName, lastName, dateEvent);
+			addServicesMenu(invoice_ID);
+			
+		}else {
+			System.out.println("**New Client**");
+			System.out.print("Input contact number of client: ");
+			String contact = scanner.nextLine();
+			addClient(firstName,lastName,contact);
+			int client_id = getClientID(firstName,lastName);
+			System.out.print("input date of event (YYYY-MM-DD): ");
+			String date = scanner.nextLine();
+			Date dateEvent = parseDate(date);
+			addInvoice(client_id, dateEvent );
+			int invoice_ID = getInvoiceID(firstName, lastName, dateEvent);
+			addServicesMenu(invoice_ID);
+		}
+		
+		System.out.println();
 	}
 	
 	//MAIN -----------------------------------------------------------------------------------------------------------------------
@@ -796,7 +983,7 @@ public class MainProgram {
 		//displayService(1);
 		//Date userDate = parseDate("2024-07-05");
 		//addInvoice(1,new java.sql.Date(userDate.getTime()));
-		// displayAllInvoice();
+		//displayAllInvoice();
 		// displayInvoice(1);
 		
 		//addServiceToInvoice(2,2,1);
